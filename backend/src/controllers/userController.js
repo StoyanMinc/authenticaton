@@ -90,4 +90,18 @@ export const login = async (req, res) => {
 export const logout = (req, res) => {
     res.clearCookie('token');
     res.status(200).json({ message: 'Logout successfully!' });
+};
+
+export const getUser = async (req, res) => {
+    try {
+        const existUser = await User.findById(req.user._id).select('-password');
+        if (!existUser) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+        res.status(200).json(existUser);
+    } catch (error) {
+        console.log('ERROR WITH SERVER GETTING USER:', error);
+        return res.status(500).json({ message: 'Internal server error!' })
+    }
+};
 }
