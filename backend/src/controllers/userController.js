@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import User from "../models/User.js";
-import { generateToken } from "../utils/token.js";
+import { generateToken, verifyToken } from "../utils/token.js";
 
 
 export const register = async (req, res) => {
@@ -119,4 +119,17 @@ export const updateUser = async (req, res) => {
         console.log('ERROR WITH SERVER UPDATE USER:', error);
         return res.status(500).json({ message: 'Internal server error!' })
     }
+};
+
+export const checkLoginStatus = async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) {
+        return res.status(401).json(false);
+    }
+
+    const decodedToken = verifyToken(token);
+    if (!decodedToken) {
+        return res.status(401).json(false);
+    }
+    res.status(200).json(true);
 }

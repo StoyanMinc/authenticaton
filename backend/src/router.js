@@ -4,7 +4,7 @@ import adminRouter from './routes/admin-router.js';
 
 const router = express.Router();
 
-router.use('/auth', userRouter);
+router.use('/user', userRouter);
 router.use('/admin', adminRouter);
 
 
