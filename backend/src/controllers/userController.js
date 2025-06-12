@@ -85,7 +85,7 @@ export const login = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error!' })
     }
 
-}
+};
 
 export const logout = (req, res) => {
     res.clearCookie('token');
@@ -104,4 +104,19 @@ export const getUser = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error!' })
     }
 };
+
+export const updateUser = async (req, res) => {
+    try {
+        const { username, bio, photo } = req.body;
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, { username, bio, photo }, { new: true }).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        console.log('ERROR WITH SERVER UPDATE USER:', error);
+        return res.status(500).json({ message: 'Internal server error!' })
+    }
 }
