@@ -1,6 +1,10 @@
 import bcrypt from 'bcrypt';
+import crypto from 'node:crypto';
 import User from "../models/User.js";
 import { generateToken, verifyToken } from "../utils/token.js";
+import Token from '../models/Token.js';
+import { hashToken } from '../utils/hashToken.js';
+import sendEmail from '../utils/sendEmail.js';
 
 
 export const register = async (req, res) => {
@@ -108,7 +112,7 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { username, bio, photo } = req.body;
-        const updatedUser = await User.findByIdAndUpdate(req.user.id, { username, bio, photo }, { new: true }).select('-password');
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, { username, bio, photo }, { new: true }).select('-password');
 
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found!' });
@@ -132,4 +136,51 @@ export const checkLoginStatus = async (req, res) => {
         return res.status(401).json(false);
     }
     res.status(200).json(true);
+};
+
+export const verifyEmail = async (req, res) => {
+    try {
+        const existUser = await User.findById(req.user._id);
+        if (!existUser) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+        if (existUser.isVerified) {
+            return res.status(400).json({ message: 'User is already verified!' });
+        }
+
+        const token = await Token.findOne({ userId: existUser._id });
+        // if token exists --> delete token
+        if (token) {
+            await token.deleteOne();
+        }
+
+        // create verification token with user id by node crypto
+        const verificationToken = crypto.randomBytes(64).toString('hex') + existUser._id;
+        // hash verification token
+        const hashedToken = await hashToken(verificationToken);
+        await Token.create({
+            userId: existUser._id,
+            verificationToken: hashedToken,
+            createdAt: Date.now(),
+            expireAt: Date.now() + 24 * 60 * 60 * 1000, // 24h
+        });
+
+        // create verification link
+        const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+
+        // send email
+        const subject = 'Verify Email - SM Auth';
+        const send_to = existUser.email;
+        const reply_to = 'noreply@noreply.com';
+        const template = 'emailVerification';
+        const send_from = process.env.USER_EMAIL;
+        const name = existUser.username;
+        const link = verificationLink;
+
+        await sendEmail(subject, send_to, reply_to, template, send_from, name, link);
+        res.status(200).json({ message: 'Email sent' });
+    } catch (error) {
+        console.log('ERROR SEND EMAIL:', error);
+        res.status(400).json({ message: 'Error sending email!' });
+    }
 }
