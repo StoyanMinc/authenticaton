@@ -183,4 +183,36 @@ export const verifyEmail = async (req, res) => {
         console.log('ERROR SEND EMAIL:', error);
         res.status(400).json({ message: 'Error sending email!' });
     }
+};
+
+export const verifyUser = async (req, res) => {
+
+    const { verificationToken } = req.params;
+    if (!verificationToken) {
+        return res.status(400).json({ message: 'Invalid verification token!' });
+    }
+
+    const hashedToken = hashToken(verificationToken);
+
+    const existToken = await Token.findOne({
+        verificationToken: hashedToken,
+        expireAt: { $gt: Date.now() }
+    });
+
+    if (!existToken) {
+        return res.status(400).json({ message: 'Invalid or expired token!' });
+    };
+
+    const existUser = await User.findById(existToken.userId);
+    if (!existUser) {
+        return res.status(400).json({ message: 'Not user found!' });
+    }
+
+    if (existUser.isVerified) {
+        return res.status(400).json({ message: 'User is alredy verified!' });
+    }
+
+    existUser.isVerified = true;
+    existUser.save();
+    res.status(200).json({ message: 'User is verified successfully!' });
 }
