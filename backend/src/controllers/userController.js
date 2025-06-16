@@ -298,3 +298,27 @@ export const resetPassword = async (req, res) => {
 
 };
 
+export const changePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword ||!newPassword) {
+        return res.status(400).json({ message: 'All fields are required!' });
+    }
+    try {
+        const existUser = await User.findById(req.user._id);
+        if (!existUser) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(currentPassword, existUser.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid password!' });
+        };
+
+        existUser.password = newPassword;
+        await existUser.save();
+        res.status(200).json({ message: 'Change password successfully!' });
+    } catch (error) {
+        console.log('ERROR CHANGE PASSWORD:', error);
+        res.status(500).json({ message: 'Internal server error!' });
+    }
+};
