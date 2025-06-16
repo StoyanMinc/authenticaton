@@ -215,4 +215,86 @@ export const verifyUser = async (req, res) => {
     existUser.isVerified = true;
     existUser.save();
     res.status(200).json({ message: 'User is verified successfully!' });
-}
+};
+
+export const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required!' });
+    }
+
+    const existUser = await User.findOne({ email });
+    if (!existUser) {
+        return res.status(404).json({ message: 'User not found!' });
+    }
+
+    const existToken = await Token.findOne({ userId: existUser._id });
+    if (existToken) {
+        await existToken.deleteOne();
+    }
+
+    const resetPasswordToken = crypto.randomBytes(64).toString('hex') + existUser._id;
+    const hashedToken = hashToken(resetPasswordToken);
+
+    await Token.create({
+        userId: existUser._id,
+        passwordResetToken: hashedToken,
+        createdAt: Date.now(),
+        expireAt: Date.now() + 60 * 60 * 1000 // 1 hour
+    });
+
+    const subject = 'Reset Password SM';
+    const send_from = process.env.USER_EMAIL;
+    const send_to = existUser.email;
+    const reply_to = 'noreply@noreply.com';
+    const template = 'resetPassword';
+    const name = existUser.username;
+    const link = `${process.env.CLIENT_URL}/reset-password/${resetPasswordToken}`;
+
+    try {
+        await sendEmail(subject, send_to, reply_to, template, send_from, name, link);
+        res.status(200).json({ message: 'Email sent!' });
+    } catch (error) {
+        console.log('EMAIL NOT SENT:', error);
+        res.status(400).json({ message: 'Email not sent!', error });
+    }
+
+};
+
+export const resetPassword = async (req, res) => {
+    const { resetPasswordToken } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+        return res.status(400).json({ message: 'All fields are required!' });
+    }
+
+    if (!resetPasswordToken) {
+        return res.status(400).json({ message: 'No token provided!' });
+    }
+
+    const hashedToken = hashToken(resetPasswordToken);
+
+    try {
+        const existToken = await Token.findOne({
+            passwordResetToken: hashedToken,
+            expireAt: { $gt: Date.now() }
+        });
+        if (!existToken) {
+            return res.status(400).json({ message: 'Invalid or expired token!' });
+        }
+        const existUser = await User.findById(existToken.userId);
+        if (!existUser) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+        existUser.password = password;
+        await existUser.save();
+        res.status(200).json({ message: 'Change password successfully!' });
+    } catch (error) {
+        console.log('ERROR RESET PASSWORD:', error);
+        res.status(500).json({ message: 'Internal server error!' });
+    }
+
+
+};
+
