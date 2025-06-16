@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 
 const UserContext = createContext();
-
+//TODO REFACTORING NEEDED!
 export const UserContextProvider = ({ children }) => {
     const router = useRouter();
     const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -142,6 +142,40 @@ export const UserContextProvider = ({ children }) => {
         }
     };
 
+    const emailVerification = async () => {
+        setLoading(true)
+        try {
+            const response = await axios.post(`${BASE_URL}/api/user/verify-email`, {}, {
+                withCredentials: true
+            });
+
+            toast.success('Verification email is sended!');
+        } catch (error) {
+            console.log('Error sending verification email:', error);
+            toast.error(error.response.data.message)
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyUser = async (token) => {
+        setLoading(true);
+
+        try {
+            const response = await axios.post(`${BASE_URL}/api/user/verify-user/${token}`, {
+                withCredentials: true
+            });
+            toast.success('Verify user successfully!');
+            getUser();
+            router.push('/');
+        } catch (error) {
+            console.log('Error verify user:', error);
+            toast.error(error.response.data.message);
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handlerUserInputs = (name) => (e) => {
         const value = e.target.value;
         setUserState((prev) => ({
@@ -170,6 +204,8 @@ export const UserContextProvider = ({ children }) => {
             logoutHandler,
             userLoginStatus,
             updateUser,
+            emailVerification,
+            verifyUser,
         }}>
             {children}
         </UserContext.Provider>

@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export default function Home() {
     useRedirectUser('/login')
-    const { logoutHandler, user, handlerUserInputs, updateUser , userState} = useUserContext();
+    const { logoutHandler, user, handlerUserInputs, updateUser, userState, emailVerification } = useUserContext();
     const { username, photo, isVerified, bio } = user
 
     const [showTextArea, setShowTextArea] = useState(false);
@@ -19,7 +19,10 @@ export default function Home() {
                 <div className="flex items-center gap-4">
                     <img className="w-[40px] h-[40px] rounded-full" src={photo} alt={username} />
                     {!isVerified && (
-                        <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all duration-300">
+                        <button
+                            onClick={emailVerification}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all duration-300"
+                        >
                             Verify Account
                         </button>
                     )}
@@ -53,7 +56,7 @@ export default function Home() {
                         </div>
                         <button
                             className="px-4 py-2 bg-blue-500 text-white rounded-md mt-[10px] hover:bg-blue-600 transition-all duration-300"
-                            onClick={(e) => updateUser(e, {bio: userState.bio}, setShowTextArea(false))}
+                            onClick={(e) => updateUser(e, { bio: userState.bio }, setShowTextArea(false))}
                         >
                             send
                         </button>

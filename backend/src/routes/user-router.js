@@ -24,7 +24,7 @@ userRouter.get('/check-login', checkLoginStatus);
 userRouter.get('/get-user', protect, getUser);
 userRouter.put('/update-user', protect, updateUser);
 userRouter.post('/verify-email', protect, verifyEmail);
-userRouter.post('/verify-user/:verificationToken', protect, verifyUser);
+userRouter.post('/verify-user/:verificationToken', verifyUser);
 userRouter.post('/forgot-password', forgotPassword);
 userRouter.post('/reset-password/:resetPasswordToken', resetPassword);
 userRouter.put('/change-password', protect, changePassword);
