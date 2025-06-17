@@ -2,11 +2,6 @@
 import { useUserContext } from "@/context/userContext";
 import { useParams } from "next/navigation";
 
-interface Props {
-    params: {
-        verificationToken: string
-    }
-}
 function VerifyPage() {
     const params = useParams();
    const verificationToken = params?.verificationToken as string;

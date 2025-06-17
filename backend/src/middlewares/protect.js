@@ -31,8 +31,7 @@ export const adminMiddleware = async (req, res, next) => {
 };
 
 export const creatorMiddleware = async (req, res, next) => {
-    console.log(req.user)
-    if (!req.user || (req.user.role !== 'creator' && req.user.role !== 'admin')) {
+    if (!req.user || req.user.role !== 'creator' && req.user.role !== 'admin') {
         return res.status(401).json({ message: 'Access denied: Creators or Admins only!' });
     }
     next();

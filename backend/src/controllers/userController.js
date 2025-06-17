@@ -243,7 +243,7 @@ export const forgotPassword = async (req, res) => {
         expireAt: Date.now() + 60 * 60 * 1000 // 1 hour
     });
 
-    const subject = 'Reset Password SM';
+    const subject = 'Reset Password - SM Auth';
     const send_from = process.env.USER_EMAIL;
     const send_to = existUser.email;
     const reply_to = 'noreply@noreply.com';

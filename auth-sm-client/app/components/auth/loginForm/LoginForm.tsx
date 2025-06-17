@@ -4,12 +4,13 @@ import { useUserContext } from "@/context/userContext";
 import { useState } from "react";
 
 export default function LoginForm() {
+    
     const { loginHandler, userState, handlerUserInputs } = useUserContext();
     const { email, password } = userState;
     const [showPassword, setShowPassword] = useState(false);
 
     return (
-        <form className="m-[52] px-10 py-14 bg-white rounded-lg w-full max-w-[520px]">
+        <form className="m-[52] px-10 py-14 bg-white rounded-lg w-full max-w-[520px] shadow-lg">
             <div className="relative z-10">
                 <h1 className="mb-2 text-center text-[2rem] font-bold">
                     Login
